@@ -7,6 +7,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\CarsController;
 use App\Http\Controllers\RaceController;
+use App\Http\Controllers\LapController;
 use App\Http\Controllers\ProfilController;
 
 
@@ -32,7 +33,8 @@ Route::get('/cars/search', [CarsController::class, 'search']);
 Route::get('/races', [RaceController::class, 'index']);
 Route::get('/races/search', [RaceController::class, 'search']);
     // Laps routes
-Route::get('/laps', [DriverController::class, 'lapsIndex']);
+Route::get('/laps', [LapController::class, 'index']);
+Route::get('/laps/search', [LapController::class, 'search']);
 
 // Authenticated routes
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -75,10 +77,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/admin/race/update/{id}', [RaceController::class, 'update']);
     Route::delete('/admin/race/delete/{id}', [RaceController::class, 'destroy']);
     // Laps routes
-    Route::get('/laps/search', [DriverController::class, 'lapsSearch']);
-    Route::post('/laps/create', [DriverController::class, 'lapsStore']);
-    Route::post('/laps/update/{id}', [DriverController::class, 'lapsUpdate']);
-    Route::delete('/laps/delete/{id}', [DriverController::class, 'lapsDestroy']);
+    Route::get('/admin/laps', [LapController::class, 'index']);
+    Route::get('/admin/laps/search', [LapController::class, 'search']);
+    Route::get('/admin/laps/edit/{id}', [LapController::class, 'edit']);
+    Route::post('/admin/laps/create', [LapController::class, 'store']);
+    Route::post('/admin/laps/update/{id}', [LapController::class, 'update']);
+    Route::delete('/admin/laps/delete/{id}', [LapController::class, 'destroy']);
     // Ticket routes
     Route::post('/tickets/create', [DriverController::class, 'ticketsStore']);
 });
