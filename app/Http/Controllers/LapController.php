@@ -11,9 +11,8 @@ use Illuminate\Http\Request;
 
 class LapController extends Controller
 {
-    /**
-     * Display a listing of all laps with pagination
-     */
+
+
     public function index()
     {
         $laps = Lap::with(['race', 'driver', 'team', 'car'])
@@ -45,9 +44,7 @@ class LapController extends Controller
         ]);
     }
 
-    /**
-     * Search laps by race, driver, or lap number
-     */
+
     public function search(Request $request)
     {
         $query = $request->query('q', '');
@@ -91,12 +88,9 @@ class LapController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created lap
-     */
+
     public function store(Request $request)
     {
-        // Validate request
         $validated = $request->validate([
             'race_id' => 'required|exists:races,id',
             'driver_id' => 'required|exists:drivers,id',
@@ -106,40 +100,30 @@ class LapController extends Controller
             'lap_time' => 'required|date_format:H:i:s.v',
         ]);
 
-        try {
-            $lap = Lap::create($validated);
-            $lap->load(['race', 'driver', 'team', 'car']);
+        $lap = Lap::create($validated);
+        $lap->load(['race', 'driver', 'team', 'car']);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lap created successfully',
-                'data' => [
-                    'id' => $lap->id,
-                    'race_id' => $lap->race_id,
-                    'race_name' => $lap->race->name,
-                    'driver_id' => $lap->driver_id,
-                    'driver_name' => $lap->driver->first_name . ' ' . $lap->driver->last_name,
-                    'lap_number' => $lap->lap_number,
-                    'team_id' => $lap->team_id,
-                    'team_name' => $lap->team->name,
-                    'car_id' => $lap->car_id,
-                    'car_number' => $lap->car->car_number,
-                    'lap_time' => $lap->lap_time,
-                    'created_at' => $lap->created_at,
-                ]
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create lap',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lap created successfully',
+            'data' => [
+                'id' => $lap->id,
+                'race_id' => $lap->race_id,
+                'race_name' => $lap->race->name,
+                'driver_id' => $lap->driver_id,
+                'driver_name' => $lap->driver->first_name . ' ' . $lap->driver->last_name,
+                'lap_number' => $lap->lap_number,
+                'team_id' => $lap->team_id,
+                'team_name' => $lap->team->name,
+                'car_id' => $lap->car_id,
+                'car_number' => $lap->car->car_number,
+                'lap_time' => $lap->lap_time,
+                'created_at' => $lap->created_at,
+            ]
+        ], 201);
     }
 
-    /**
-     * Retrieve lap data for editing
-     */
+
     public function edit($id)
     {
         $lap = Lap::with(['race', 'driver', 'team', 'car'])->find($id);
@@ -171,9 +155,7 @@ class LapController extends Controller
         ]);
     }
 
-    /**
-     * Update the lap in storage
-     */
+
     public function update(Request $request, $id)
     {
         $lap = Lap::find($id);
@@ -185,7 +167,6 @@ class LapController extends Controller
             ], 404);
         }
 
-        // Validate request
         $validated = $request->validate([
             'race_id' => 'nullable|exists:races,id',
             'driver_id' => 'nullable|exists:drivers,id',
@@ -195,41 +176,30 @@ class LapController extends Controller
             'lap_time' => 'nullable|date_format:H:i:s.v',
         ]);
 
-        try {
-            // Update only provided fields
-            $lap->update(array_filter($validated, fn($value) => !is_null($value)));
-            $lap->load(['race', 'driver', 'team', 'car']);
+        $lap->update(array_filter($validated, fn($value) => !is_null($value)));
+        $lap->load(['race', 'driver', 'team', 'car']);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lap updated successfully',
-                'data' => [
-                    'id' => $lap->id,
-                    'race_id' => $lap->race_id,
-                    'race_name' => $lap->race->name,
-                    'driver_id' => $lap->driver_id,
-                    'driver_name' => $lap->driver->first_name . ' ' . $lap->driver->last_name,
-                    'lap_number' => $lap->lap_number,
-                    'team_id' => $lap->team_id,
-                    'team_name' => $lap->team->name,
-                    'car_id' => $lap->car_id,
-                    'car_number' => $lap->car->car_number,
-                    'lap_time' => $lap->lap_time,
-                    'updated_at' => $lap->updated_at,
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update lap',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lap updated successfully',
+            'data' => [
+                'id' => $lap->id,
+                'race_id' => $lap->race_id,
+                'race_name' => $lap->race->name,
+                'driver_id' => $lap->driver_id,
+                'driver_name' => $lap->driver->first_name . ' ' . $lap->driver->last_name,
+                'lap_number' => $lap->lap_number,
+                'team_id' => $lap->team_id,
+                'team_name' => $lap->team->name,
+                'car_id' => $lap->car_id,
+                'car_number' => $lap->car->car_number,
+                'lap_time' => $lap->lap_time,
+                'updated_at' => $lap->updated_at,
+            ]
+        ]);
     }
 
-    /**
-     * Remove the lap from storage
-     */
+
     public function destroy($id)
     {
         $lap = Lap::find($id);
@@ -241,19 +211,11 @@ class LapController extends Controller
             ], 404);
         }
 
-        try {
-            $lap->delete();
+        $lap->delete();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lap deleted successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to delete lap',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lap deleted successfully'
+        ]);
     }
 }
