@@ -103,7 +103,7 @@ class LapController extends Controller
             'lap_number' => 'required|integer|min:1',
             'team_id' => 'required|exists:teams,id',
             'car_id' => 'required|exists:cars,id',
-            'lap_time' => 'required|date_format:H:i:s',
+            'lap_time' => 'required|date_format:H:i:s.v',
         ]);
 
         try {
@@ -192,7 +192,7 @@ class LapController extends Controller
             'lap_number' => 'nullable|integer|min:1',
             'team_id' => 'nullable|exists:teams,id',
             'car_id' => 'nullable|exists:cars,id',
-            'lap_time' => 'nullable|date_format:H:i:s',
+            'lap_time' => 'nullable|date_format:H:i:s.v',
         ]);
 
         try {
