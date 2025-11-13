@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('races');
         Schema::create('races', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('location');
             $table->date('date');
-            $table->integer('laps_count');
-            $table->string('status');
-            $table->foreignId('race_id')->constrained()->onDelete('cascade');
+            $table->time('start_time')->nullable();
+            $table->enum('status', ['scheduled', 'ongoing', 'completed'])->default('scheduled');
+            $table->decimal('price', 8, 2)->nullable();
+            $table->string('img')->nullable();
             $table->timestamps();
         });
     }

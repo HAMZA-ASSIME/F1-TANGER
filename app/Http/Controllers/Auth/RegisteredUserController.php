@@ -32,6 +32,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // $user->addRole('admin');
+
         // If you use Laratrust and want to assign a default role (optional)
         // $user->attachRole('user');
 

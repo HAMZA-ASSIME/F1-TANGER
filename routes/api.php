@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\CarsController;
+use App\Http\Controllers\RaceController;
 use App\Http\Controllers\ProfilController;
 
 
@@ -24,11 +26,11 @@ Route::get('/teams/search', [TeamController::class, 'search']);
 Route::get('/drivers', [DriverController::class, 'index']);
 Route::get('/drivers/search', [DriverController::class, 'search']);
     // Cars routes
-Route::get('/cars', [DriverController::class, 'carsIndex']);
-Route::get('/cars/search', [DriverController::class, 'carsSearch']);
+Route::get('/cars', [CarsController::class, 'index']);
+Route::get('/cars/search', [CarsController::class, 'search']);
     // Race routes
-Route::get('/races', [DriverController::class, 'racesIndex']);
-Route::get('/races/search', [DriverController::class, 'racesSearch']);
+Route::get('/races', [RaceController::class, 'index']);
+Route::get('/races/search', [RaceController::class, 'search']);
     // Laps routes
 Route::get('/laps', [DriverController::class, 'lapsIndex']);
 
@@ -50,6 +52,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/teams/create', [TeamController::class, 'store']);
     Route::post('/teams/update/{id}', [TeamController::class, 'update']);
     Route::delete('/teams/delete/{id}', [TeamController::class, 'destroy']);
+    
     // Driver routes
     Route::get('/admin/drivers', [DriverController::class, 'index']);
     Route::get('/admin/drivers/search', [DriverController::class, 'search']);
@@ -58,13 +61,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/admin/drivers/update/{id}', [DriverController::class, 'update']);
     Route::delete('/admin/drivers/delete/{id}', [DriverController::class, 'destroy']);
     // Cars routes
-    Route::post('/cars/create', [DriverController::class, 'carsStore']);
-    Route::post('/cars/update/{id}', [DriverController::class, 'carsUpdate']);
-    Route::delete('/cars/delete/{id}', [DriverController::class, 'carsDestroy']);
+    Route::post('/admin/cars/create', [CarsController::class, 'store']);
+    Route::get('/admin/cars', [CarsController::class, 'index']);
+    Route::get('/admin/cars/search', [CarsController::class, 'search']);
+    Route::get('/admin/cars/edit/{id}', [CarsController::class, 'edit']);
+    Route::post('/admin/cars/update/{id}', [CarsController::class, 'update']);
+    Route::delete('/admin/cars/delete/{id}', [CarsController::class, 'destroy']);
     // Race routes
-    Route::post('/races/create', [DriverController::class, 'racesStore']);
-    Route::post('/races/update/{id}', [DriverController::class, 'racesUpdate']);
-    Route::delete('/races/delete/{id}', [DriverController::class, 'racesDestroy']);
+    Route::post('/admin/race/create', [RaceController::class, 'store']);
+    Route::get('/admin/races', [RaceController::class, 'index']);
+    Route::get('/admin/race/search', [RaceController::class, 'search']);
+    Route::get('/admin/race/edit/{id}', [RaceController::class, 'edit']);
+    Route::post('/admin/race/update/{id}', [RaceController::class, 'update']);
+    Route::delete('/admin/race/delete/{id}', [RaceController::class, 'destroy']);
     // Laps routes
     Route::get('/laps/search', [DriverController::class, 'lapsSearch']);
     Route::post('/laps/create', [DriverController::class, 'lapsStore']);

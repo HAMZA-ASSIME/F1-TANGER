@@ -20,7 +20,12 @@ class Race extends Model
         'name',
         'location',
         'date',
+        'start_time',
         'status',
+        'laps_nbr',
+        'nbr_tickets',
+        'price',
+        'img'
     ];
 
     /**
@@ -30,6 +35,7 @@ class Race extends Model
      */
     protected $casts = [
         'date' => 'date',
+        'price' => 'decimal:2',
     ];
 
     /**
