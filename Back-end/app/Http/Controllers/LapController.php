@@ -88,6 +88,41 @@ class LapController extends Controller
         ]);
     }
 
+    public function getByRace($raceId)
+    {
+        $race = Race::find($raceId);
+        if (!$race) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Race not found'
+            ], 404);
+        }
+
+        $laps = Lap::with(['driver', 'team', 'car'])
+            ->where('race_id', $raceId)
+            ->orderBy('driver_id')
+            ->orderBy('lap_number')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'race_id' => $raceId,
+            'race_name' => $race->name,
+            'data' => $laps->map(fn($lap) => [
+                'id' => $lap->id,
+                'race_id' => $lap->race_id,
+                'driver_id' => $lap->driver_id,
+                'driver_name' => $lap->driver->first_name . ' ' . $lap->driver->last_name ?? null,
+                'lap_number' => $lap->lap_number,
+                'team_id' => $lap->team_id,
+                'team_name' => $lap->team->name ?? null,
+                'car_id' => $lap->car_id,
+                'car_number' => $lap->car->car_number ?? null,
+                'lap_time' => $lap->lap_time,
+            ])
+        ]);
+    }
+
 
     public function store(Request $request)
     {

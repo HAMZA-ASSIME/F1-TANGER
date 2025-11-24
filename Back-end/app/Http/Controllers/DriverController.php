@@ -8,31 +8,65 @@ use App\Models\Driver;
 
 class DriverController extends Controller
 {   
-    public function index(){
-        $drivers = Driver::with('team:id,name')->paginate(10);
+    public function index(Request $request){
+        $drivers = Driver::with('team:id,name')
+            ->when($request->search, fn($q) => $q->where('first_name', 'LIKE', '%' . $request->search . '%')
+                ->orWhere('last_name', 'LIKE', '%' . $request->search . '%'))
+            ->orderBy('total_points', 'desc')
+            ->paginate(6);
 
         $formattedDrivers = $drivers->map(function ($driver) {
             return [
                 'id' => $driver->id,
-                'full_name' => $driver->first_name . ' ' . $driver->last_name,
+                'first_name' => $driver->first_name,
+                'last_name' => $driver->last_name,
                 'nationality' => $driver->nationality,
-                'team_name' => $driver->team?->name ?? 'N/A',
+                'date_of_birth' => $driver->date_of_birth,
+                'team' => $driver->team,
                 'total_points' => $driver->total_points,
+                'driver_img' => $driver->driver_img,
             ];
         });
 
         return response()->json([
-            'message' => 'Drivers retrieved successfully',
             'data' => $formattedDrivers,
-            'pagination' => [
-                'current_page' => $drivers->currentPage(),
-                'per_page' => $drivers->perPage(),
-                'total' => $drivers->total(),
-                'last_page' => $drivers->lastPage(),
-                'from' => $drivers->firstItem(),
-                'to' => $drivers->lastItem(),
-            ]
-        ], 200);
+            'current_page' => $drivers->currentPage(),
+            'last_page' => $drivers->lastPage(),
+            'total' => $drivers->total(),
+            'per_page' => $drivers->perPage(),
+        ]);
+    }
+
+    /**
+     * Get only the count of drivers for admin dashboard
+     */
+    public function indexAdminDashboard(){
+        $count = Driver::count();
+        return response()->json([
+            'count' => $count
+        ]);
+    }
+
+    /**
+     * Get top 5 drivers sorted by total_points for dashboard
+     */
+    public function topDriversForDashboard(){
+        $topDrivers = Driver::with('team:id,name')
+            ->orderBy('total_points', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($driver) {
+                return [
+                    'id' => $driver->id,
+                    'first_name' => $driver->first_name,
+                    'last_name' => $driver->last_name,
+                    'team' => $driver->team,
+                    'total_points' => $driver->total_points,
+                    'driver_img' => $driver->driver_img,
+                ];
+            });
+
+        return response()->json($topDrivers);
     }
 
     public function search(Request $request){
@@ -188,5 +222,77 @@ class DriverController extends Controller
             'message' => 'Driver deleted successfully',
             'deleted_id' => $id
         ], 200);
+    }
+
+    /**
+     * Get driver performance statistics
+     */
+    public function getPerformance($driverId)
+    {
+        $driver = Driver::findOrFail($driverId);
+        
+        // Get all laps for this driver
+        $laps = \App\Models\Lap::where('driver_id', $driverId)
+            ->with(['race'])
+            ->get();
+
+        // Group laps by race and calculate stats
+        $raceStats = $laps->groupBy('race_id')->map(function($raceLaps) {
+            $race = $raceLaps->first()->race;
+            
+            // Find best lap time and calculate total race time
+            $bestLap = null;
+            $bestLapMs = PHP_INT_MAX;
+            $totalMs = 0;
+            
+            foreach ($raceLaps as $lap) {
+                // Convert HH:MM:SS:MMM format to milliseconds
+                $parts = explode(':', $lap->lap_time);
+                if (count($parts) === 4) {
+                    $ms = (int)$parts[0] * 3600000 + (int)$parts[1] * 60000 + (int)$parts[2] * 1000 + (int)$parts[3];
+                    $totalMs += $ms;
+                    
+                    if ($ms < $bestLapMs) {
+                        $bestLapMs = $ms;
+                        $bestLap = $lap->lap_time;
+                    }
+                }
+            }
+            
+            // Convert total time back to HH:MM:SS:MMM format
+            $totalTimeFormatted = $this->millisecondsToTimeFormat($totalMs);
+            
+            return [
+                'race_id' => $race->id,
+                'race_name' => $race->name,
+                'lap_count' => $raceLaps->count(),
+                'best_lap_time' => $bestLap ?? 'N/A',
+                'total_time' => $totalTimeFormatted,
+                'position' => $raceLaps->count() > 0 ? $raceLaps->count() : 'DNF',
+                'points' => 0, // Will be calculated from race results
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => 'success',
+            'driver_id' => $driverId,
+            'driver_name' => $driver->first_name . ' ' . $driver->last_name,
+            'data' => $raceStats
+        ]);
+    }
+    
+    /**
+     * Convert milliseconds to HH:MM:SS:MMM format
+     */
+    private function millisecondsToTimeFormat($ms)
+    {
+        $hours = intdiv($ms, 3600000);
+        $ms = $ms % 3600000;
+        $minutes = intdiv($ms, 60000);
+        $ms = $ms % 60000;
+        $seconds = intdiv($ms, 1000);
+        $milliseconds = $ms % 1000;
+        
+        return sprintf('%02d:%02d:%02d:%03d', $hours, $minutes, $seconds, $milliseconds);
     }
 }

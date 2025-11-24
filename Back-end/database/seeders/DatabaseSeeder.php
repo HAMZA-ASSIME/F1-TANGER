@@ -18,5 +18,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(LaratrustSeeder::class);
+        $this->call(F1DataSeeder::class);
+        $this->call(ClientSeeder::class);
+        $this->call(LapsSeeder::class);
+        $this->call(Team12RacesSeeder::class);
+        $this->call(ClientTicketsSeeder::class);
+        $this->call(AddTicketsToAllClientsSeeder::class);
     }
 }

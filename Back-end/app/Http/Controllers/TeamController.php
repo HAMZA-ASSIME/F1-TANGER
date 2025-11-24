@@ -3,12 +3,38 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Team;
 
 class TeamController extends Controller
 {
     public function index(Request $request)
     {
-        $teams = $request->user()->teams()->get();
+        $teams = Team::all();
+        return response()->json([
+            'data' => $teams,
+            'count' => $teams->count()
+        ]);
+    }
+
+    /**
+     * Get only the count of teams for admin dashboard
+     */
+    public function indexAdminDashboard()
+    {
+        $count = Team::count();
+        return response()->json([
+            'count' => $count
+        ]);
+    }
+
+    public function indexAdmin(Request $request)
+    {
+        $teams = Team::select('id', 'name', 'founded_date', 'country', 'base_location', 'total_points')
+            ->withCount('drivers')
+            ->when($request->search, fn($q) => $q->where('name', 'LIKE', '%' . $request->search . '%'))
+            ->orderBy('total_points', 'desc')
+            ->paginate(6);
+
         return response()->json($teams);
     }
 
@@ -79,9 +105,8 @@ class TeamController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $teams = $request->user()->teams()
-            ->where('name', 'LIKE', '%' . $request->name . '%')
-            ->get();
+        $teams = Team::where('name', 'LIKE', '%' . $request->name . '%')
+            ->paginate(6);
 
         return response()->json($teams);
     }
@@ -93,5 +118,67 @@ class TeamController extends Controller
         $team->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Get current user's team
+     */
+    public function getTeam(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get the first team created by this user with all relationships
+        $team = Team::where('user_id', $user->id)
+            ->with(['drivers', 'cars', 'laps'])
+            ->withCount(['drivers', 'cars'])
+            ->first();
+
+        if (!$team) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User has no team assigned'
+            ], 404);
+        }
+
+        // Count unique races instead of laps
+        $racesCount = $team->laps()->distinct('race_id')->count('race_id');
+        $team->races_count = $racesCount;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $team
+        ]);
+    }
+
+    /**
+     * Get team's drivers
+     */
+    public function getTeamDrivers($teamId, Request $request)
+    {
+        $team = Team::findOrFail($teamId);
+        $drivers = $team->drivers;
+
+        return response()->json([
+            'status' => 'success',
+            'team_id' => $teamId,
+            'team_name' => $team->name,
+            'data' => $drivers
+        ]);
+    }
+
+    /**
+     * Get team's cars
+     */
+    public function getTeamCars($teamId, Request $request)
+    {
+        $team = Team::findOrFail($teamId);
+        $cars = $team->cars;
+
+        return response()->json([
+            'status' => 'success',
+            'team_id' => $teamId,
+            'team_name' => $team->name,
+            'data' => $cars
+        ]);
     }
 }

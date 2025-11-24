@@ -7,8 +7,13 @@ use App\Models\Cars;
 
 class CarsController extends Controller
 {
-    public function index(){
-        $cars = Cars::with('team:id,name', 'driver:id,first_name,last_name')->paginate(10);
+    public function index(Request $request){
+        $cars = Cars::with('team:id,name', 'driver:id,first_name,last_name')
+            ->when($request->search, fn($q) => $q->where('model', 'LIKE', '%' . $request->search . '%')
+                ->orWhere('brand', 'LIKE', '%' . $request->search . '%')
+                ->orWhere('car_number', 'LIKE', '%' . $request->search . '%'))
+            ->orderBy('car_number', 'asc')
+            ->paginate(6);
 
         $formattedCars = $cars->map(function ($car) {
             return [
@@ -16,7 +21,9 @@ class CarsController extends Controller
                 'car_number' => $car->car_number,
                 'model' => $car->model,
                 'brand' => $car->brand,
+                'team_id' => $car->team_id,
                 'team_name' => $car->team?->name ?? 'N/A',
+                'driver_id' => $car->driver_id,
                 'driver_name' => ($car->driver ? $car->driver->first_name . ' ' . $car->driver->last_name : 'N/A'),
                 'status' => $car->status,
                 'horsepower' => $car->horsepower,
@@ -25,17 +32,12 @@ class CarsController extends Controller
         });
 
         return response()->json([
-            'message' => 'Cars retrieved successfully',
             'data' => $formattedCars,
-            'pagination' => [
-                'current_page' => $cars->currentPage(),
-                'per_page' => $cars->perPage(),
-                'total' => $cars->total(),
-                'last_page' => $cars->lastPage(),
-                'from' => $cars->firstItem(),
-                'to' => $cars->lastItem(),
-            ]
-        ], 200);
+            'current_page' => $cars->currentPage(),
+            'last_page' => $cars->lastPage(),
+            'total' => $cars->total(),
+            'per_page' => $cars->perPage(),
+        ]);
     }
 
     public function search(Request $request){

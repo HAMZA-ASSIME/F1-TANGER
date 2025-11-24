@@ -54,11 +54,11 @@ class User extends Authenticatable implements LaratrustUser
     }
 
     /**
-     * Get the clients for the user.
+     * Get the client for the user (one-to-one relationship).
      */
-    public function clients()
+    public function client()
     {
-        return $this->hasMany(Client::class);
+        return $this->hasOne(Client::class);
     }
 
     public function teams()

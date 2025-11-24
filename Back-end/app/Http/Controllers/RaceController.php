@@ -16,19 +16,61 @@ class RaceController extends Controller
                 'name' => $race->name,
                 'location' => $race->location,
                 'date' => $race->date->format('Y-m-d'),
-                // 'start_time' => $race->start_time,
+                'start_time' => $race->start_time,
                 'status' => $race->status,
-                // 'laps_nbr' => $race->laps_nbr,
-                // 'nbr_tickets' => $race->nbr_tickets,
+                'laps_nbr' => $race->laps_nbr,
+                'nbr_tickets' => $race->nbr_tickets,
                 'price' => $race->price,
-                // 'img' => $race->img,
+                'img' => $race->img,
+                'participants' => 20,
             ];
         });
 
         return response()->json([
-            'message' => 'Races retrieved successfully',
-            'data' => $formattedRaces
-        ], 200);
+            'data' => $formattedRaces,
+            'pagination' => [
+                'current_page' => $races->currentPage(),
+                'per_page' => $races->perPage(),
+                'total' => $races->total(),
+                'last_page' => $races->lastPage(),
+                'from' => $races->firstItem(),
+                'to' => $races->lastItem(),
+            ]
+        ]);
+    }
+
+    /**
+     * Get only the count of races for admin dashboard
+     */
+    public function indexAdminDashboard(){
+        $count = Race::count();
+        return response()->json([
+            'count' => $count
+        ]);
+    }
+
+    /**
+     * Get top 6 races for dashboard schedule
+     */
+    public function topRacesForDashboard(){
+        $topRaces = Race::limit(6)
+            ->get()
+            ->map(function ($race) {
+                return [
+                    'id' => $race->id,
+                    'name' => $race->name,
+                    'location' => $race->location,
+                    'date' => $race->date->format('Y-m-d'),
+                    'start_time' => $race->start_time,
+                    'status' => $race->status,
+                    'laps_nbr' => $race->laps_nbr,
+                    'nbr_tickets' => $race->nbr_tickets,
+                    'price' => $race->price,
+                    'img' => $race->img,
+                ];
+            });
+
+        return response()->json($topRaces);
     }
 
     public function search(Request $request){
@@ -135,26 +177,29 @@ class RaceController extends Controller
         $race = Race::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'location' => 'sometimes|required|string|max:255',
-            'date' => 'sometimes|required|date',
-            'start_time' => 'sometimes|nullable|date_format:H:i',
-            'status' => 'sometimes|required|in:scheduled,ongoing,completed',
-            'laps_nbr' => 'sometimes|nullable|integer|min:0',
-            'nbr_tickets' => 'sometimes|nullable|integer|min:0',
-            'price' => 'sometimes|nullable|numeric|min:0',
-            'img' => 'sometimes|nullable|file|mimes:jpeg,jpg,png,gif,webp|max:2048',
+            'name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'date' => 'required|date',
+            'start_time' => 'nullable|string',
+            'status' => 'required|in:scheduled,ongoing,completed',
+            'laps_nbr' => 'nullable|integer|min:0',
+            'nbr_tickets' => 'nullable|integer|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'img' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
         ]);
 
-        // Only update fields that were provided in the request (except img)
-        foreach ($validated as $key => $value) {
-            if ($key !== 'img') {
-                $race->$key = $value;
-            }
-        }
+        // Update all fields
+        $race->name = $validated['name'];
+        $race->location = $validated['location'];
+        $race->date = $validated['date'];
+        $race->start_time = $validated['start_time'] ?? null;
+        $race->status = $validated['status'];
+        $race->laps_nbr = $validated['laps_nbr'] ?? null;
+        $race->nbr_tickets = $validated['nbr_tickets'] ?? null;
+        $race->price = $validated['price'] ?? null;
 
         // Handle image upload if provided
-        if ($request->hasFile('img')) {
+        if ($request->hasFile('img') && $request->file('img')->isValid()) {
             // Delete old image if exists
             if ($race->img && file_exists(public_path($race->img))) {
                 unlink(public_path($race->img));
@@ -171,7 +216,18 @@ class RaceController extends Controller
 
         return response()->json([
             'message' => 'Race updated successfully',
-            'race' => $race
+            'race' => [
+                'id' => $race->id,
+                'name' => $race->name,
+                'location' => $race->location,
+                'date' => $race->date->format('Y-m-d'),
+                'start_time' => $race->start_time,
+                'status' => $race->status,
+                'laps_nbr' => $race->laps_nbr,
+                'nbr_tickets' => $race->nbr_tickets,
+                'price' => $race->price,
+                'img' => $race->img
+            ]
         ], 200);
     }
 
