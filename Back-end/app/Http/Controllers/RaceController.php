@@ -73,6 +73,32 @@ class RaceController extends Controller
         return response()->json($topRaces);
     }
 
+    /**
+     * Get featured races sorted by date (upcoming races)
+     */
+    public function featuredRaces(){
+        $featuredRaces = Race::where('date', '>=', now())
+            ->orderBy('date', 'asc')
+            ->limit(3)
+            ->get()
+            ->map(function ($race) {
+                return [
+                    'id' => $race->id,
+                    'name' => $race->name,
+                    'location' => $race->location,
+                    'date' => $race->date->format('Y-m-d'),
+                    'start_time' => $race->start_time,
+                    'status' => $race->status,
+                    'laps_nbr' => $race->laps_nbr,
+                    'nbr_tickets' => $race->nbr_tickets,
+                    'price' => $race->price,
+                    'img' => $race->img,
+                ];
+            });
+
+        return response()->json($featuredRaces);
+    }
+
     public function search(Request $request){
         $query = $request->get('q', '');
         

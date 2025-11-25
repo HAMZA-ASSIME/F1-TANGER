@@ -40,6 +40,7 @@ Route::get('/races', [RaceController::class, 'index']);
 Route::get('/races/search', [RaceController::class, 'search']);
 Route::get('/races/admin/dashboard', [RaceController::class, 'indexAdminDashboard']);
 Route::get('/races/top-races', [RaceController::class, 'topRacesForDashboard']);
+Route::get('/races/featured', [RaceController::class, 'featuredRaces']);
     // Standings/Championship routes
 Route::get('/standings', [StandingController::class, 'index']);
     // Laps routes

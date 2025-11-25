@@ -7,6 +7,8 @@ function Home() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [drivers, setDrivers] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [raceResults, setRaceResults] = useState([]);
 
   useEffect(() => {
     // Show loader briefly when page loads
@@ -34,35 +36,39 @@ function Home() {
     fetchTopDrivers();
   }, []);
 
-  const raceResults = [
-    {
-      position: 1,
-      driver: 'Max Verstappen',
-      team: 'Red Bull Racing',
-      time: '1:32:45.123'
-    },
-    {
-      position: 2,
-      driver: 'Lewis Hamilton',
-      team: 'Mercedes',
-      time: '+2.5s'
-    },
-    {
-      position: 3,
-      driver: 'Charles Leclerc',
-      team: 'Ferrari',
-      time: '+8.2s'
-    }
-  ];
+  useEffect(() => {
+    // Fetch teams from backend
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/teams');
+        if (response.ok) {
+          const data = await response.json();
+          setTeams(data.data || data);
+        }
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+      }
+    };
 
-  const teams = [
-    { id: 1, name: 'Red Bull Racing', color: '#0082FA' },
-    { id: 2, name: 'Mercedes', color: '#00D2BE' },
-    { id: 3, name: 'Ferrari', color: '#DC0000' },
-    { id: 4, name: 'McLaren', color: '#FF8700' },
-    { id: 5, name: 'Alpine', color: '#0082FA' },
-    { id: 6, name: 'Aston Martin', color: '#006C3D' }
-  ];
+    fetchTeams();
+  }, []);
+
+  useEffect(() => {
+    // Fetch races from backend
+    const fetchRaces = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/races/featured');
+        if (response.ok) {
+          const data = await response.json();
+          setRaceResults(data);
+        }
+      } catch (error) {
+        console.error('Error fetching races:', error);
+      }
+    };
+
+    fetchRaces();
+  }, []);
 
   const news = [
     {
@@ -123,12 +129,12 @@ function Home() {
         <div className="section-wrapper">
           <h2 className="section-title">Latest Race Results</h2>
           <div className="results-grid">
-            {raceResults.map((result) => (
-              <div key={result.position} className="result-card">
-                <div className="position-badge">{result.position}</div>
-                <h3 className="driver-name">{result.driver}</h3>
-                <p className="team-name">{result.team}</p>
-                <p className="race-time">{result.time}</p>
+            {raceResults.map((race, index) => (
+              <div key={race.id} className="result-card">
+                <div className="position-badge">{index + 1}</div>
+                <h3 className="driver-name">{race.name}</h3>
+                <p className="team-name">{race.location}</p>
+                <p className="race-time">{race.date}</p>
               </div>
             ))}
           </div>
@@ -141,7 +147,7 @@ function Home() {
           <h2 className="section-title">F1 Teams</h2>
           <div className="teams-grid">
             {teams.map((team) => (
-              <div key={team.id} className="team-card" style={{ '--team-color': team.color }}>
+              <div key={team.id} className="team-card" style={{ '--team-color': team.color || '#E10600' }}>
                 <div className="team-color-bar"></div>
                 <h3 className="team-name">{team.name}</h3>
               </div>
